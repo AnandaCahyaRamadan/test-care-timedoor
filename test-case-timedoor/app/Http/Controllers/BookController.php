@@ -13,25 +13,54 @@ class BookController extends Controller
         $limit = $request->input('limit', 10);
         $search = $request->input('search', '');
 
-        $books = Book::select(
-                'books.id',
-                'books.name as book_name',
-                'categories.name as category_name',
-                'authors.name as author_name',
-                DB::raw('COALESCE(AVG(ratings.rating), 0) as average_rating'),
-                DB::raw('COUNT(ratings.id) as voter')
+        // $books = Book::select(
+        //         'books.id',
+        //         'books.name as book_name',
+        //         'categories.name as category_name',
+        //         'authors.name as author_name',
+        //         DB::raw('COALESCE(AVG(ratings.rating), 0) as average_rating'),
+        //         DB::raw('COUNT(ratings.id) as voter')
+        //     )
+        //     ->join('categories', 'books.category_id', '=', 'categories.id')
+        //     ->join('authors', 'books.author_id', '=', 'authors.id')
+        //     ->leftJoin('ratings', 'books.id', '=', 'ratings.book_id')
+        //     ->when($search, function ($query) use ($search) {
+        //         $query->where('books.name', 'like', "%{$search}%")
+        //               ->orWhere('authors.name', 'like', "%{$search}%");
+        //     })
+        //     ->groupBy('books.id', 'books.name', 'categories.name', 'authors.name')
+        //     ->orderByDesc('average_rating')
+        //     ->limit($limit)
+        //     ->get();
+
+        $ratingStats = DB::table('ratings')
+            ->select(
+                'book_id',
+                DB::raw('AVG(rating) as average_rating'),
+                DB::raw('COUNT(id) as voter')
             )
-            ->join('categories', 'books.category_id', '=', 'categories.id')
-            ->join('authors', 'books.author_id', '=', 'authors.id')
-            ->leftJoin('ratings', 'books.id', '=', 'ratings.book_id')
-            ->when($search, function ($query) use ($search) {
-                $query->where('books.name', 'like', "%{$search}%")
-                      ->orWhere('authors.name', 'like', "%{$search}%");
-            })
-            ->groupBy('books.id', 'books.name', 'categories.name', 'authors.name')
-            ->orderByDesc('average_rating')
-            ->limit($limit)
-            ->get();
+            ->groupBy('book_id');
+
+        $books = Book::select(
+            'books.id',
+            'books.name as book_name',
+            'categories.name as category_name',
+            'authors.name as author_name',
+            DB::raw('COALESCE(rating_stats.average_rating, 0) as average_rating'),
+            DB::raw('COALESCE(rating_stats.voter, 0) as voter')
+        )
+        ->join('categories', 'books.category_id', '=', 'categories.id')
+        ->join('authors', 'books.author_id', '=', 'authors.id')
+        ->leftJoinSub($ratingStats, 'rating_stats', function ($join) {
+            $join->on('books.id', '=', 'rating_stats.book_id');
+        })
+        ->when($search, function ($query) use ($search) {
+            $query->where('books.name', 'like', "%{$search}%")
+                ->orWhere('authors.name', 'like', "%{$search}%");
+        })
+        ->orderByDesc('average_rating')
+        ->limit($limit)
+        ->get();
 
         return view('books.index', compact('books', 'limit', 'search'));
     }

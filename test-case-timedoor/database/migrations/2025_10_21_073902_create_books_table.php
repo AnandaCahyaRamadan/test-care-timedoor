@@ -14,6 +14,7 @@ return new class extends Migration
             $table->foreignId('author_id')->constrained('authors')->cascadeOnDelete();
             $table->foreignId('category_id')->constrained('categories')->cascadeOnDelete();
             $table->timestamps();
+            $table->index(['name','author_id', 'category_id']);
         });
     }
 
