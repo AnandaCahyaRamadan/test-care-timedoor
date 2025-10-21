@@ -2,32 +2,37 @@
 
 namespace Database\Seeders;
 
-use App\Models\Book;
-use App\Models\User;
-use App\Models\Author;
-use App\Models\Category;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\DB as FacadesDB;
-use Illuminate\Container\Attributes\DB as AttributesDB;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\Author;
+use App\Models\Category;
+use App\Models\Book;
+use App\Models\Rating;
 
 class DatabaseSeeder extends Seeder
 {
-    use WithoutModelEvents;
-
-    /**
-     * Seed the application's database.
-     */
     public function run(): void
     {
-        Author::factory()->count(1000)->create();
-        Category::factory()->count(3000)->create();
+        Author::factory(1000)->create();
+        Category::factory(3000)->create();
 
-        $books = Book::factory()->count(100000)->make()->toArray();
-
-        foreach (array_chunk($books, 1000) as $chunk) {
+        $totalBooks = 100000;
+        $batchSize = 500;
+        for ($i = 0; $i < $totalBooks; $i += $batchSize) {
+            $chunk = Book::factory($batchSize)->make()->toArray();
             DB::table('books')->insert($chunk);
+            echo "Inserted books: " . ($i + $batchSize) . "\n";
         }
+
+        $totalRatings = 500000;
+        $batchSize = 500;
+
+        for ($i = 0; $i < $totalRatings; $i += $batchSize) {
+            $chunk = Rating::factory($batchSize)->make()->toArray();
+            DB::table('ratings')->insert($chunk);
+            echo "Inserted ratings: " . ($i + $batchSize) . "\n";
+        }
+
+        echo "Seeding selesai tanpa kehabisan memori!\n";
     }
 }
