@@ -22,7 +22,7 @@ Ikuti langkah-langkah berikut untuk menjalankan project secara lokal:
 ### 1. Clone Repository
 
 ```bash
-git clone https://github.com/AnandaCahyaRamadan/test-care-timedoor.git
+git clone https://github.com/AnandaCahyaRamadan/test-case-timedoor.git
 ```
 
 ### 2. Masuk ke Direktori
